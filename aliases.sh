@@ -14,8 +14,9 @@ hyphae-monitor-all-init() {
 }
 
 hyphae-self-update() {
+  cd $HY_MONITORING_HOME
   git pull
-  cp $HY_MONITORING_HOME/aliases.sh $HOME/.bash_aliases
+  cp aliases.sh $HOME/.bash_aliases
   . $HOME/.bash_aliases
 }
 
