@@ -1,5 +1,10 @@
 if [ "$HY_MONITORING_HOME" = "" ]; then
-  read -p 'Enter Hyphae Monitoring HOME DIR: ' HY_MONITORING_HOME
+  if [ ! -f $HOME/.hyphae_monitoring_home ]; then
+    read -p 'Enter Hyphae Monitoring HOME DIR: ' HY_MONITORING_HOME
+    echo $HY_MONITORING_HOME > $HOME/.hyphae_monitoring_home
+  fi
+
+  HY_MONITORING_HOME="$(cat $HOME/.hyphae_monitoring_home | xargs echo -n)"
   export HY_MONITORING_HOME;
 fi
 
