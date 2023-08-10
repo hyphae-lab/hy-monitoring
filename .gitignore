@@ -1,0 +1,4 @@
+*.ini
+*.zip
+monitor-all-downloads/
+.idea/

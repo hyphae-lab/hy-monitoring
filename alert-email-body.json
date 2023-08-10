@@ -1,0 +1,16 @@
+{
+  "Subject": {
+    "Data": "__subject__",
+    "Charset": "utf-8"
+  },
+  "Body": {
+    "Text": {
+      "Data": "__text__",
+      "Charset": "utf-8"
+    },
+    "Html": {
+      "Data": "__html__",
+      "Charset": "utf-8"
+    }
+  }
+}
