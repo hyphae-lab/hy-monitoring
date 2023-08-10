@@ -34,7 +34,11 @@ hyphae-edit-ini() {
     echo "Enter one of the keys: " $allowedSingleKeys
     read -p '  key=' newKey
     read -p '  value=' newValue
-    echo $newKey=$newValue >> $fileNameNew
+    if [ "$newKey" != "" ] && [ "$newValue" != "" ]; then
+      echo $newKey=$newValue >> $fileNameNew
+    else
+      echo '  did not add line as new key or new value were blank'
+    fi
     echo
     read -p ' Add new lines? (y or leave _blank_ to skip) ' zzz
   done
