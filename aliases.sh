@@ -7,3 +7,9 @@ hyphae-monitor-init() {
 hyphae-monitor-all-init() {
   hyphae-edit-ini monitor-all.ini 'port,from_email,secret' 'url,url_id,url_name,url_secret,alert_email'
 }
+
+hyphae-self-update() {
+  git pull
+  cp aliases.sh $HOME/.bash_aliases
+  . $HOME/.bash_aliases
+}
