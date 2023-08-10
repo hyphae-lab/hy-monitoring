@@ -13,3 +13,18 @@ hyphae-self-update() {
   cp aliases.sh $HOME/.bash_aliases
   . $HOME/.bash_aliases
 }
+
+hyphae-help() {
+  echo 'Hyphae Monitoring'
+  echo ' commands available:'
+  echo
+  echo '   hyphae-help'
+  echo '   hyphae-self-update'
+  echo
+  echo '   hyphae-monitor-init'
+  echo '   hyphae-monitor-all-init'
+  echo
+  echo '   hyphae-edit-ini <file_path> <fields_comma_delim> <groupped_fields_comma delim>'
+}
+
+hyphae-help;
