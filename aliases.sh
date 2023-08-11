@@ -69,10 +69,11 @@ hyphae-monitor-all-status() {
 hyphae-monitor-self-update() {
   cd $HY_MONITORING_HOME
   git pull
-  if [ "$(grep -Fc \$HY_MONITORING_HOME/aliases.sh $HOME/.bashrc)" = '0' ]; then
-    echo 'if [ -f $HY_MONITORING_HOME/aliases.sh ]; then . $HY_MONITORING_HOME/aliases.sh; fi;' >> $HOME/.bashrc
+  if [ "$(grep -Fc '.hyphae_monitoring_aliases' $HOME/.bashrc)" = '0' ]; then
+    echo 'if [ -f $HOME/.hyphae_monitoring_aliases ]; then . $HOME/.hyphae_monitoring_aliases; fi;' >> $HOME/.bashrc
   fi
-  . aliases.sh
+  cp aliases.sh $HOME/.hyphae_monitoring_aliases
+  . $HOME/.hyphae_monitoring_aliases
 }
 
 hyphae-monitor-help() {
