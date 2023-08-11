@@ -28,7 +28,7 @@ hyphae-monitor-status() {
     echo 'Please run hyphae-monitor-init command'
     return 1
   fi
-  if [ "$(ps aux | grep monitor-server.py | grep -v | wc -l | tr -d ' ')" = "0" ]; then
+  if [ "$(ps aux | grep monitor-server.py | grep -v grep | wc -l | tr -d ' ')" = "0" ]; then
     echo 'Monitor Server is NOT running'
     return 1
   else
@@ -54,7 +54,7 @@ hyphae-monitor-all-status() {
     echo 'Please run hyphae-monitor-all-init command'
     return 1
   fi
-  if [ "$(ps aux | grep monitor-all-server.py | grep -v | wc -l | tr -d ' ')" = "0" ]; then
+  if [ "$(ps aux | grep monitor-all-server.py | grep -v grep | wc -l | tr -d ' ')" = "0" ]; then
     echo 'Monitor ALL Server is NOT running'
     return 1
   else
