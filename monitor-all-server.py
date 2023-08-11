@@ -66,6 +66,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 PORT = int(env['port'])
 
-# with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
-#     print("Server running at http://localhost:{}".format(PORT))
-#     httpd.serve_forever()
+with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
+    print("Server running at http://localhost:{}".format(PORT))
+    httpd.serve_forever()
