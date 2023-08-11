@@ -82,12 +82,16 @@ hyphae-monitor-help() {
   echo ' commands available:'
   echo
   echo '   hyphae-monitor-help'
+  echo
   echo '   hyphae-monitor-self-update'
   echo
   echo '   hyphae-monitor-init'
+  echo '   hyphae-monitor-status'
+  echo
   echo '   hyphae-monitor-all-init'
+  echo '   hyphae-monitor-all-status'
   echo
   echo '   hyphae-edit-ini <file_path> <fields_comma_delim> <groupped_fields_comma delim>'
 }
 
-hyphae-help;
+hyphae-monitor-help;
