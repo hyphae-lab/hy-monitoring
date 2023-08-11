@@ -79,7 +79,8 @@ hyphae-monitor-start() {
     return 1
   else
     echo 'Monitor Server is starting on port ' $(__hyphae-monitor-helper-get-port $iniFilename)
-    nohup python3 $scriptFilename 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
+    echo sudo nohup python3 $scriptFilename 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log
+    sudo nohup python3 $scriptFilename 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
     echo ' ...started'
   fi
 }
