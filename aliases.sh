@@ -13,7 +13,7 @@ fi
 hyphae-monitor-init() {
   cd $HY_MONITORING_HOME
   hyphae-edit-ini monitor.ini 'port,secret' 'cmd,cmd_label,cmd_expected_ouput'
-  if [ "$(ps aux | grep monitor-server.py | grep -v | wc -l | tr -d ' ')" = "0" ]; then
+  if [ "$(ps aux | grep monitor-server.py | grep -v grep | wc -l | tr -d ' ')" = "0" ]; then
     echo 'Monitor Server is starting on port ' $(grep port monitor.ini | sed -e 's/port=//' -e 's/ //g' )
     nohup python3 monitor-server.py 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
     echo ' ...started'
@@ -41,7 +41,7 @@ hyphae-monitor-status() {
 
 hyphae-monitor-all-init() {
   hyphae-edit-ini monitor-all.ini 'port,from_email,secret' 'url,url_id,url_name,url_secret,alert_email'
-  if [ "$(ps aux | grep monitor-all-server.py | grep -v | wc -l | tr -d ' ')" = "0" ]; then
+  if [ "$(ps aux | grep monitor-all-server.py | grep -v grep | wc -l | tr -d ' ')" = "0" ]; then
     echo 'Monitor ALL Server is running on port ' $(grep port monitor-all.ini | sed -e 's/port=//' -e 's/ //g' )
     nohup python3 monitor-all-server.py 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
   else
