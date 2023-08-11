@@ -64,7 +64,7 @@ hyphae-monitor-all-status() {
   $(grep -E '^(url|alert)' monitor-all.ini | sed -E -e 's/^url_//' )
 }
 
-hyphae-self-update() {
+hyphae-monitor-self-update() {
   cd $HY_MONITORING_HOME
   git pull
   if [ "$(grep -Fc $HY_MONITORING_HOME/aliases.sh $HOME/.bashrc)" = '0' ]; then
@@ -73,7 +73,7 @@ hyphae-self-update() {
   . aliases.sh
 }
 
-hyphae-help() {
+hyphae-monitor-help() {
   echo 'Hyphae Monitoring'
   echo " home dir: $HY_MONITORING_HOME"
   echo ' commands available:'
