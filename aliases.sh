@@ -23,6 +23,7 @@ hyphae-monitor-init() {
 }
 
 hyphae-monitor-status() {
+  cd $HY_MONITORING_HOME
   if [ ! -f monitor.ini ]; then
     echo 'Missing monitor.ini'
     echo 'Please run hyphae-monitor-init command'
@@ -49,6 +50,7 @@ hyphae-monitor-all-init() {
 }
 
 hyphae-monitor-all-status() {
+  cd $HY_MONITORING_HOME
   if [ ! -f monitor-all.ini ]; then
     echo 'Missing monitor-all.ini'
     echo 'Please run hyphae-monitor-all-init command'
