@@ -1,4 +1,8 @@
 if [ "$HY_MONITORING_HOME" = "" ]; then
+  if [ "$(grep -Fc '.hyphae_monitoring_aliases' $HOME/.bashrc)" = '0' ]; then
+    echo 'if [ -f $HOME/.hyphae_monitoring_aliases ]; then . $HOME/.hyphae_monitoring_aliases; fi;' >> $HOME/.bashrc
+  fi
+
   if [ ! -f $HOME/.hyphae_monitoring_home ]; then
     read -p 'Enter Hyphae Monitoring HOME DIR: ' HY_MONITORING_HOME
     echo $HY_MONITORING_HOME > $HOME/.hyphae_monitoring_home
@@ -157,9 +161,6 @@ hyphae-monitor-status() {
 hyphae-monitor-self-update() {
   cd $HY_MONITORING_HOME
   git pull
-  if [ "$(grep -Fc '.hyphae_monitoring_aliases' $HOME/.bashrc)" = '0' ]; then
-    echo 'if [ -f $HOME/.hyphae_monitoring_aliases ]; then . $HOME/.hyphae_monitoring_aliases; fi;' >> $HOME/.bashrc
-  fi
   cp aliases.sh $HOME/.hyphae_monitoring_aliases
   . $HOME/.hyphae_monitoring_aliases
 }
