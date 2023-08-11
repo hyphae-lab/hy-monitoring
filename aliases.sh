@@ -78,10 +78,10 @@ hyphae-monitor-start() {
   __hyphae-monitor-helper-check-ps;
 
   if [ "$?" = "0" ]; then
-    echo 'Monitor Server already running on port ' $(__hyphae-monitor-helper-get-port)
+    echo 'Monitor Server already running on port ' $(__hyphae-monitor-helper-get-port $iniFilename)
     return 1
   else
-    echo 'Monitor Server is starting on port ' $(__hyphae-monitor-helper-get-port)
+    echo 'Monitor Server is starting on port ' $(__hyphae-monitor-helper-get-port $iniFilename)
     nohup python3 $scriptFilename 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
     echo ' ...started'
   fi
@@ -144,7 +144,7 @@ hyphae-monitor-status() {
     echo 'Monitor Server is NOT running'
     return 1
   else
-    echo 'Monitor Server is running on port ' $(grep port $iniFilename | sed -e 's/port=//' -e 's/ //g' )
+    echo 'Monitor Server is running on port ' $(__hyphae-monitor-helper-get-port $iniFilename)
   fi
   
   if [ "$1" = 'all' ]; then
