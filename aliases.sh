@@ -46,9 +46,6 @@ __hyphae-monitor-helper-check-ps() {
   return 0
 }
 
-__hyphae-monitor-helper-get-port() {
-  $(grep port $1 | sed -e 's/port=//' -e 's/ //g' )
-}
 
 # <cmd> all|single restart?
 hyphae-monitor-start() {
@@ -79,7 +76,8 @@ hyphae-monitor-start() {
     return 1
   else
     echo 'Monitor Server is starting on port ' $(__hyphae-monitor-helper-get-port $iniFilename)
-    echo sudo nohup python3 $scriptFilename 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log
+    echo $scriptFilename
+    echo sudo nohup python3 $scriptFilename 2 $HY_MONITORING_HOME/monitor.error 1 $HY_MONITORING_HOME/monitor.log
     sudo nohup python3 $scriptFilename 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
     echo ' ...started'
   fi
