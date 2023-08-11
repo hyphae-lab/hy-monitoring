@@ -67,8 +67,10 @@ hyphae-monitor-all-status() {
 hyphae-self-update() {
   cd $HY_MONITORING_HOME
   git pull
-  cp aliases.sh $HOME/.bash_aliases
-  . $HOME/.bash_aliases
+  if [ "$(grep -Fc $HY_MONITORING_HOME/aliases.sh $HOME/.bashrc)" = '0' ]; then
+    echo 'if [ -f $HY_MONITORING_HOME/aliases.sh ]; then . $HY_MONITORING_HOME/aliases.sh; fi;' >> $HOME/.bashrc
+  fi
+  . aliases.sh
 }
 
 hyphae-help() {
@@ -76,8 +78,8 @@ hyphae-help() {
   echo " home dir: $HY_MONITORING_HOME"
   echo ' commands available:'
   echo
-  echo '   hyphae-help'
-  echo '   hyphae-self-update'
+  echo '   hyphae-monitor-help'
+  echo '   hyphae-monitor-self-update'
   echo
   echo '   hyphae-monitor-init'
   echo '   hyphae-monitor-all-init'
