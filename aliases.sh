@@ -11,59 +11,147 @@ fi
 . $HY_MONITORING_HOME/edit-ini.sh
 
 hyphae-monitor-init() {
+  if [ "$1" = '' ]; then
+    echo ' When initializing choose "single" or "all" as first arg'
+    return 1
+  fi
+
   cd $HY_MONITORING_HOME
-  hyphae-edit-ini monitor.ini 'port,secret' 'cmd,cmd_label,cmd_expected_ouput'
-  if [ "$(ps aux | grep monitor-server.py | grep -v grep | wc -l | tr -d ' ')" = "0" ]; then
-    echo 'Monitor Server is starting on port ' $(grep port monitor.ini | sed -e 's/port=//' -e 's/ //g' )
-    nohup python3 monitor-server.py 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
+
+  scriptFilename=''
+  iniFilename=''
+  if [ "$1" = 'all' ]; then
+    iniFilename='monitor-all.ini'
+    hyphae-edit-ini $iniFilename 'port,from_email,secret' 'url,url_id,url_name,url_secret,alert_email'
+    scriptFilename='monitor-all-server.py'
+  else
+    iniFilename='monitor.ini'
+    hyphae-edit-ini $iniFilename 'port,secret' 'cmd,cmd_label,cmd_expected_ouput'
+    scriptFilename='monitor-server.py'
+  fi
+
+  hyphae-monitor-status $1;
+  if [ "$?" = "1" ]; then
+    echo 'Monitor Server is starting on port ' $(grep port $iniFilename | sed -e 's/port=//' -e 's/ //g' )
+    nohup python3 $scriptFilename 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
     echo ' ...started'
   else
-    echo 'Monitor Server is running on port ' $(grep port monitor.ini | sed -e 's/port=//' -e 's/ //g' )
+    echo 'Monitor Server is running on port ' $(grep port $iniFilename | sed -e 's/port=//' -e 's/ //g' )
+  fi
+}
+
+__hyphae-monitor-helper-check-ps() {
+  monitorProcess=$(ps aux | grep $1 | grep -v grep | tr -d '\n' )
+  if [ "$monitorProcess" = "" ]; then
+    sed -E -e 's/^[a-z]+ +([0-9]+).+/\1/' <<<$monitorProcess
+    return 1
+  fi
+  return 0
+}
+
+__hyphae-monitor-helper-get-port() {
+  $(grep port $1 | sed -e 's/port=//' -e 's/ //g' )
+}
+
+hyphae-monitor-start() {
+  if [ "$1" = '' ]; then
+    echo '  choose "single" or "all" as first arg'
+    return 1
+  fi
+
+  cd $HY_MONITORING_HOME
+
+  scriptFilename=''
+  iniFilename=''
+  if [ "$1" = 'all' ]; then
+    iniFilename='monitor-all.ini'
+    scriptFilename='monitor-all-server.py'
+  else
+    iniFilename='monitor.ini'
+    scriptFilename='monitor-server.py'
+  fi
+
+  __hyphae-monitor-helper-check-ps;
+
+  if [ "$?" = "0" ]; then
+    echo 'Monitor Server already running on port ' $(__hyphae-monitor-helper-get-port)
+    return 1
+  else
+    echo 'Monitor Server is starting on port ' $(__hyphae-monitor-helper-get-port)
+    nohup python3 $scriptFilename 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
+    echo ' ...started'
+  fi
+}
+
+hyphae-monitor-stop() {
+  if [ "$1" = '' ]; then
+    echo ' choose "single" or "all" as first arg'
+    return 1
+  fi
+
+  cd $HY_MONITORING_HOME
+
+  scriptFilename=''
+  iniFilename=''
+  if [ "$1" = 'all' ]; then
+    iniFilename='monitor-all.ini'
+    scriptFilename='monitor-all-server.py'
+  else
+    iniFilename='monitor.ini'
+    scriptFilename='monitor-server.py'
+  fi
+
+  pid=$(__hyphae-monitor-helper-check-ps;)
+
+  if [ "$?" = "0" ]; then
+    echo " Stopping monitor (pid:$pid)"
+    return 1
+  else
+    echo 'Monitor Server is not running'
   fi
 }
 
 hyphae-monitor-status() {
-  cd $HY_MONITORING_HOME
-  if [ ! -f monitor.ini ]; then
-    echo 'Missing monitor.ini'
-    echo 'Please run hyphae-monitor-init command'
+  if [ "$1" = '' ]; then
+    echo '  choose "single" or "all" as first arg'
     return 1
   fi
-  if [ "$(ps aux | grep monitor-server.py | grep -v grep | wc -l | tr -d ' ')" = "0" ]; then
+
+  scriptFilename=''
+  iniFilename=''
+  if [ "$1" = 'all' ]; then
+    iniFilename='monitor-all.ini'
+    scriptFilename='monitor-all-server.py'
+  else
+    iniFilename='monitor.ini'
+    scriptFilename='monitor-server.py'
+  fi
+
+  cd $HY_MONITORING_HOME
+  if [ ! -f $iniFilename ]; then
+    echo 'Missing ' $iniFilename
+    echo "Please run 'hyphae-monitor-init $1' command"
+    return 1
+  fi
+  
+  __hyphae-monitor-helper-check-ps;
+  
+  if [ "$?" = "1" ]; then
     echo 'Monitor Server is NOT running'
     return 1
   else
-    echo 'Monitor Server is running on port ' $(grep port monitor.ini | sed -e 's/port=//' -e 's/ //g' )
+    echo 'Monitor Server is running on port ' $(grep port $iniFilename | sed -e 's/port=//' -e 's/ //g' )
   fi
-  echo 'Monitor is check the following commands, with label and expected output:'
-  $(grep '^cmd' monitor.ini | sed -E -e 's/^cmd_//' )
-}
-
-hyphae-monitor-all-init() {
-  hyphae-edit-ini monitor-all.ini 'port,from_email,secret' 'url,url_id,url_name,url_secret,alert_email'
-  if [ "$(ps aux | grep monitor-all-server.py | grep -v grep | wc -l | tr -d ' ')" = "0" ]; then
-    echo 'Monitor ALL Server is running on port ' $(grep port monitor-all.ini | sed -e 's/port=//' -e 's/ //g' )
-    nohup python3 monitor-all-server.py 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
+  
+  if [ "$1" = 'all' ]; then
+    echo 'Monitor is monitoring the following URLs:'
+    grep -E '^(url|alert)' monitor-all.ini | sed -E -e 's/^url_//'
   else
-    echo 'Monitor ALL Server is running on port ' $(grep port monitor-all.ini | sed -e 's/port=//' -e 's/ //g' )
+    echo 'Monitor is check the following commands, with label and expected output:'
+    grep '^cmd' monitor.ini | sed -E -e 's/^cmd_//'
   fi
-}
-
-hyphae-monitor-all-status() {
-  cd $HY_MONITORING_HOME
-  if [ ! -f monitor-all.ini ]; then
-    echo 'Missing monitor-all.ini'
-    echo 'Please run hyphae-monitor-all-init command'
-    return 1
-  fi
-  if [ "$(ps aux | grep monitor-all-server.py | grep -v grep | wc -l | tr -d ' ')" = "0" ]; then
-    echo 'Monitor ALL Server is NOT running'
-    return 1
-  else
-    echo 'Monitor ALL Server is running on port ' $(grep port monitor-all.ini | sed -e 's/port=//' -e 's/ //g' )
-  fi
-  echo 'Monitor is monitoring the following URLs:'
-  $(grep -E '^(url|alert)' monitor-all.ini | sed -E -e 's/^url_//' )
+  
+  return 0
 }
 
 hyphae-monitor-self-update() {
@@ -85,11 +173,10 @@ hyphae-monitor-help() {
   echo
   echo '   hyphae-monitor-self-update'
   echo
-  echo '   hyphae-monitor-init'
-  echo '   hyphae-monitor-status'
-  echo
-  echo '   hyphae-monitor-all-init'
-  echo '   hyphae-monitor-all-status'
+  echo '   hyphae-monitor-init [all|single]'
+  echo '   hyphae-monitor-status [all|single]'
+  echo '   hyphae-monitor-start [all|single]'
+  echo '   hyphae-monitor-stop [all|single]'
   echo
   echo '   hyphae-edit-ini <file_path> <fields_comma_delim> <groupped_fields_comma delim>'
 }
