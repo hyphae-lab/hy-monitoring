@@ -34,14 +34,7 @@ hyphae-monitor-init() {
     scriptFilename='monitor-server.py'
   fi
 
-  hyphae-monitor-status $1;
-  if [ "$?" = "1" ]; then
-    echo 'Monitor Server is starting on port ' $(grep port $iniFilename | sed -e 's/port=//' -e 's/ //g' )
-    nohup python3 $scriptFilename 2>$HY_MONITORING_HOME/monitor.error 1>$HY_MONITORING_HOME/monitor.log &
-    echo ' ...started'
-  else
-    echo 'Monitor Server is running on port ' $(grep port $iniFilename | sed -e 's/port=//' -e 's/ //g' )
-  fi
+  hyphae-monitor-start $1 restart;
 }
 
 __hyphae-monitor-helper-check-ps() {
@@ -57,6 +50,7 @@ __hyphae-monitor-helper-get-port() {
   $(grep port $1 | sed -e 's/port=//' -e 's/ //g' )
 }
 
+# <cmd> all|single restart?
 hyphae-monitor-start() {
   if [ "$1" = '' ]; then
     echo '  choose "single" or "all" as first arg'
@@ -75,9 +69,12 @@ hyphae-monitor-start() {
     scriptFilename='monitor-server.py'
   fi
 
-  __hyphae-monitor-helper-check-ps;
+  pid=$(__hyphae-monitor-helper-check-ps);
 
   if [ "$?" = "0" ]; then
+    if [ "$2" = 'restart' ]; then
+      kill $pid
+    fi
     echo 'Monitor Server already running on port ' $(__hyphae-monitor-helper-get-port $iniFilename)
     return 1
   else
@@ -105,7 +102,7 @@ hyphae-monitor-stop() {
     scriptFilename='monitor-server.py'
   fi
 
-  pid=$(__hyphae-monitor-helper-check-ps;)
+  pid=$(__hyphae-monitor-helper-check-ps)
 
   if [ "$?" = "0" ]; then
     echo " Stopping monitor (pid:$pid)"
