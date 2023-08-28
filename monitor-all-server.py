@@ -4,6 +4,7 @@ import subprocess
 import os
 import sys
 import json
+import ssl
 
 def get_env():
     env = {}
@@ -67,5 +68,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 PORT = int(env['port'])
 
 with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
+    if env['ssl'] == 'true':
+                httpd.socket = ssl.wrap_socket(httpd.socket, keyfile=env['ssl_cert_key_file'], certfile=env['ssl_cert_file'], server_side=True)
     print("Server running at http://localhost:{}".format(PORT))
     httpd.serve_forever()
