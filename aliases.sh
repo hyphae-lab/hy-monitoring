@@ -78,7 +78,7 @@ hyphae-monitor-start() {
 
   if [ "$?" = "0" ]; then
     if [ "$2" = 'restart' ]; then
-      kill $pid
+      sudo kill -9 $pid
     fi
     echo 'Monitor Server already running on port ' $(__hyphae-monitor-helper-get-port $iniFilename)
     return 1
@@ -111,6 +111,7 @@ hyphae-monitor-stop() {
 
   if [ "$?" = "0" ]; then
     echo " Stopping monitor (pid:$pid)"
+    sudo kill -9 $pid
     return 1
   else
     echo 'Monitor Server is not running'
