@@ -45,6 +45,12 @@ __hyphae-monitor-helper-check-ps() {
   fi
   return 0
 }
+__hyphae-monitor-helper-get-port() {
+  grep -oE '^ *port=.+' $1 | sed 's/port=//'
+  if [ "$?" = "1" ]; then
+    echo 'no port defined'
+  fi
+}
 
 
 # <cmd> all|single restart?
@@ -66,7 +72,7 @@ hyphae-monitor-start() {
     scriptFilename='monitor-server.py'
   fi
 
-  pid=$(__hyphae-monitor-helper-check-ps);
+  pid=$(__hyphae-monitor-helper-check-ps scriptFilename);
 
   if [ "$?" = "0" ]; then
     if [ "$2" = 'restart' ]; then
@@ -99,7 +105,7 @@ hyphae-monitor-stop() {
     scriptFilename='monitor-server.py'
   fi
 
-  pid=$(__hyphae-monitor-helper-check-ps)
+  pid=$(__hyphae-monitor-helper-check-ps $scriptFilename)
 
   if [ "$?" = "0" ]; then
     echo " Stopping monitor (pid:$pid)"
@@ -132,7 +138,7 @@ hyphae-monitor-status() {
     return 1
   fi
   
-  __hyphae-monitor-helper-check-ps;
+  __hyphae-monitor-helper-check-ps $scriptFilename;
   
   if [ "$?" = "1" ]; then
     echo 'Monitor Server is NOT running'
