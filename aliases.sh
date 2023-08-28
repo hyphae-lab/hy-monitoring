@@ -39,11 +39,13 @@ hyphae-monitor-init() {
 
 __hyphae-monitor-helper-check-ps() {
   monitorProcess=$(ps aux | grep $1 | grep -v grep | tr -d '\n' )
-  if [ "$monitorProcess" = "" ]; then
+  if [ "$monitorProcess" != "" ]; then
     sed -E -e 's/^[a-z]+ +([0-9]+).+/\1/' <<<$monitorProcess
+    return 0
+  else
+    echo "no $1 running"
     return 1
   fi
-  return 0
 }
 __hyphae-monitor-helper-get-port() {
   grep -oE '^ *port=.+' $1 | sed 's/port=//'
