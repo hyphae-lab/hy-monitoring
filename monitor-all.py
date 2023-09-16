@@ -5,6 +5,8 @@ import os
 import sys
 import json
 import re
+import time
+
 
 # this will insert the .ini or .env key=value lines into a dictionary
 #   if a "key" repeats more than once it will become an array of all key=value values
@@ -64,7 +66,13 @@ def check_wget_response_for_errors(json_object):
 
     return 'content_error'
 
+def test_send_alert(to_email, subject, body):
+    print ('testing send alert', to_email, subject, body)
+
 def send_alert(to_email, subject, body):
+    if os.environ.get('Z_TEST_DEBUG') is not None:
+        test_send_alert(to_email, subject, body)
+        return
     body_file_name = 'alert-email-body.json'
     body_file = open(body_file_name)
     body_string = body_file.read()
@@ -95,110 +103,98 @@ url_ids = env['url_id'] if type(env['url_id']==list) else [env['url_id']]
 alert_emails = env['alert_email'] if type(env['alert_email']==list) else [env['alert_email']]
 
 downloads_dir='monitor-all-downloads'
-last_checked_file = open(downloads_dir+'/_last-checked.txt')
-last_checked_id = last_checked_file.read()
-last_checked_file.close()
-last_checked_index = 0
 # loop on all URLs to monitor
 for i, url_id in enumerate(url_ids):
-    if url_id == last_checked_id:
-        last_checked_index = i
-        break
-next_index = (i+1 + len(urls)) % len(urls)
+    # new + old log file
+    log_file_name = url_ids[i]+'.log'
+    new_log_file_name = url_ids[i]+'.new.log'
 
-# new + old log file
-log_file_name = url_ids[next_index]+'.log'
-new_log_file_name = url_ids[next_index]+'.new.log'
+    # new + old json/ouput file
+    output_json_file_name = url_ids[i]+'.json'
+    new_output_json_file_name = url_ids[i]+'.new.json'
 
-# new + old json/ouput file
-output_json_file_name = url_ids[next_index]+'.json'
-new_output_json_file_name = url_ids[next_index]+'.new.json'
+    # -S show server headers, -o debug/stderr to log file, -O save output to file
+    wget_cmd = "wget -S -o %s -O %s %s " % (new_log_file_name, new_output_json_file_name, urls[i])
 
-# -S show server headers, -o debug/stderr to log file, -O save output to file
-wget_cmd = "wget -S -o %s -O %s %s " % (new_log_file_name, new_output_json_file_name, urls[next_index])
+    cmd_process = subprocess.run(cmd_without_new_line, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-cmd_process = subprocess.run(cmd_without_new_line, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if cmd_process.stderr != "":
+        # error in executing WGET itself! ouch!
+        log_file = open(log_file_name, 'w')
+        log_file.write(' wget fetch failed: please inspect the code or the server python modules')
+        log_file.close()
 
-if cmd_process.stderr != "":
-    # error in executing WGET itself! ouch!
-    log_file = open(log_file_name, 'w')
-    log_file.write(' wget fetch failed: please inspect the code or the server python modules')
-    log_file.close()
+        send_alert(alert_emails[i], url_names[i]+': wget fetch failed', 'please inspect the code or the server python modules')
+    else:
+        log_file = open(log_file_name)
+        log_error = check_wget_log_for_errors(log_file.read())
+        log_file.close()
 
-    send_alert(alert_emails[next_index], url_names[next_index]+': wget fetch failed', 'please inspect the code or the server python modules')
-else:
-    log_file = open(log_file_name)
-    log_error = check_wget_log_for_errors(log_file.read())
-    log_file.close()
+        new_log_file = open(new_log_file_name)
+        new_log_error = check_wget_log_for_errors(new_log_file.read())
 
-    new_log_file = open(new_log_file_name)
-    new_log_error = check_wget_log_for_errors(new_log_file.read())
+        output_json_file = open(output_json_file_name)
+        output = json.load(output_json_file)
+        output_json_file.close()
+        output_error = check_wget_response_for_errors(output)
 
-    output_json_file = open(output_json_file_name)
-    output = json.load(output_json_file)
-    output_json_file.close()
-    output_error = check_wget_response_for_errors(output)
+        new_output_json_file = open(new_output_json_file_name)
+        new_output = json.load(new_output_json_file)
+        new_output_error = check_wget_response_for_errors(new_output)
 
-    new_output_json_file = open(new_output_json_file_name)
-    new_output = json.load(new_output_json_file)
-    new_output_error = check_wget_response_for_errors(new_output)
+        alert_body = ''
+        alert_subject = url_names[i]
+        if not log_error and not new_log_error:
+            # no error, no change, do nothing
 
-    alert_body = ''
-    alert_subject = url_names[next_index]
-    if not log_error and not new_log_error:
-        # no error, no change, do nothing
+        elif log_error and new_log_error:
+            if log_error != new_log_error
+                # alert of error change
+                alert_subject += ': has a new error'
+            else
+                # no change
+                # maybe alert for some times of the error (if STILL in error state)
+                alert_subject += ': still has error'
 
-    elif log_error and new_log_error:
-        if log_error != new_log_error
-            # alert of error change
-            alert_subject += ': has a new error'
-        else
-            # no change
-            # maybe alert for some times of the error (if STILL in error state)
-            alert_subject += ': still has error'
-
-    elif log_error or new_log_error:
-        # alert about changes
-        alert_subject += ': has an error'
-        alert_subject += ': error is fixed'
+        elif log_error or new_log_error:
+            # alert about changes
+            alert_subject += ': has an error'
+            alert_subject += ': error is fixed'
 
 
-    elif not output_error and not new_output_error:
-        # no error, no change, do nothing
-    elif output_error and new_output_error:
-        if output_error != new_output_error
-            # alert of error change
-            alert_subject += ': has new error'
-        else
-            # no change
-            # maybe alert for some times of the error (if STILL in error state)
-            alert_subject += ': still has error'
+        elif not output_error and not new_output_error:
+            # no error, no change, do nothing
+        elif output_error and new_output_error:
+            if output_error != new_output_error
+                # alert of error change
+                alert_subject += ': has new error'
+            else
+                # no change
+                # maybe alert for some times of the error (if STILL in error state)
+                alert_subject += ': still has error'
 
-    elif output_error or new_output_error:
-        # alert about changes
-        alert_subject += ': has an error'
-        alert_subject += ': error is fixed'
+        elif output_error or new_output_error:
+            # alert about changes
+            alert_subject += ': has an error'
+            alert_subject += ': error is fixed'
 
-    elif output != new_output:
-        # alert about changes
-        alert_subject += ': changes have occurred'
+        elif output != new_output:
+            # alert about changes
+            alert_subject += ': changes have occurred'
 
-    if alert_body:
-        send_alert(alert_emails[next_index], alert_subject, alert_body)
+        if alert_body:
+            send_alert(alert_emails[i], alert_subject, alert_body)
 
-    # save new to old before end of check
-    log_file = open(new_log_file_name, 'w')
-    log_file.write(new_log_file.read())
-    log_file.close()
+        # save new to old before end of check
+        log_file = open(new_log_file_name, 'w')
+        log_file.write(new_log_file.read())
+        log_file.close()
 
-    output_json_file = open(output_json_file_name, 'w')
-    output_json_file.write(new_output_json_file.read())
-    output_json_file.close()
+        output_json_file = open(output_json_file_name, 'w')
+        output_json_file.write(new_output_json_file.read())
+        output_json_file.close()
 
-    last_checked_file = open(downloads_dir+'/_last-checked.txt', 'w')
-    last_checked_file.write(url_ids[next_index])
-    last_checked_file.close()
-
+    time.sleep(.5)
 
 
 
