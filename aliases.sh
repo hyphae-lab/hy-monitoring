@@ -141,13 +141,13 @@ hyphae-monitor-status() {
     return 1
   fi
   
-  __hyphae-monitor-helper-check-ps $scriptFilename;
+  pid=$(__hyphae-monitor-helper-check-ps $scriptFilename)
   
   if [ "$?" = "1" ]; then
     echo 'Monitor Server is NOT running'
     return 1
   else
-    echo 'Monitor Server is running on port ' $(__hyphae-monitor-helper-get-port $iniFilename)
+    echo 'Monitor Server is running on port ' $(__hyphae-monitor-helper-get-port $iniFilename) " process ID: $pid"
   fi
   
   if [ "$1" = 'all' ]; then
