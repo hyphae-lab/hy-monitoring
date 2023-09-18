@@ -26,30 +26,30 @@ def get_env():
     return env
 env = get_env()
 
-class MyHandler(http.server.SimpleHTTPRequestHandler):
+class MonitorChecks(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/check?'):
             (path, query) = self.path.split('?')
             if not query or  not 'secret='+env['secret'] in query:
-                self.bad_secret_code()
+                self.unauthed_response()
             else:
-                self.execute_code()
+                self.run_checks()
         else:
-            self.blank_response()
+            self.not_found_response()
 
-    def blank_response(self):
+    def not_found_response(self):
         self.send_response(404)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
         self.wfile.write('404'.encode('utf-8'))
 
-    def bad_secret_code(self):
+    def unauthed_response(self):
         self.send_response(401)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
         self.wfile.write('401'.encode('utf-8'))
 
-    def execute_code(self):
+    def run_checks(self):
 
         env = get_env()
         output = ''
@@ -71,6 +71,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 PORT = int(env['port'])
 
-with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
+with socketserver.TCPServer(("", PORT), MonitorChecks) as httpd:
     print("Server running at http://localhost:{}".format(PORT))
     httpd.serve_forever()
