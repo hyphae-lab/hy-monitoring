@@ -15,6 +15,8 @@ def get_env():
                 continue
             (key, value) = line.replace('\n', '').split('=')
             key = key.strip()
+            if key[0] == '#':
+                continue
             value = value.strip()
             if key in env:
                 if type(env[key]) == list:
